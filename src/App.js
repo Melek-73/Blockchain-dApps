@@ -24,24 +24,32 @@ function App() {
   const [toggle, setToggle] = useState(false);
 
   const loadBlockchainData = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);   //window.ethereum = injected by MetaMask in your browser
-    setProvider(provider);   //Web3Provider (from Ethers.js) wraps MetaMask so you can use it to send transactions, interact with the blockchain, and so on.
-
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    setProvider(provider);
+    //window.ethereum = injected by MetaMask in your browser
+    //Web3Provider (from Ethers.js) wraps MetaMask so you can use it to send transactions, interact with the blockchain, and so on.
     const network = await provider.getNetwork();
     console.log(network);
 
+    //This creates a JS object that represents the realEstate smart contract and allows us to interact with it :
     const realEstate = new ethers.Contract(
       config[network.chainId].realEstate.address,
       RealEstate,
       provider,
     );
+    //address → where the contract is deployed
+    //RealEstate → ABI (contract interface)
+    //provider → how you want to interact with the contract (read-only or read/write)
+
     const totalSupply = await realEstate.totalSupply();
     const homes = [];
+    console.log("Loading blockchain...");
+    console.log(totalSupply.toString());
 
     for (var i = 1; i <= totalSupply; i++) {
-      const uri = await realEstate.tokenURI(i);
-      const response = await fetch(uri);
-      const metadata = await response.json();
+      const uri = await realEstate.tokenURI(i); // asks blockchain: Where is the metadata? Get metadata URL
+      const response = await fetch(uri); // Fetch the metadata from the URL (this is usually stored on IPFS or a centralized server) asks the internet:“Give me the JSON file”
+      const metadata = await response.json(); // Convert the response  to JSON
       homes.push(metadata);
     }
 
@@ -54,7 +62,9 @@ function App() {
     );
     setEscrow(escrow);
 
+    //Listen for account changes in MetaMask and update the account state accordingly. This ensures that the application stays in sync with the user's current account and can react to changes, such as when the user switches accounts or disconnects from MetaMask.
     window.ethereum.on("accountsChanged", async () => {
+      //Ask MetaMask to give the connected accounts
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });

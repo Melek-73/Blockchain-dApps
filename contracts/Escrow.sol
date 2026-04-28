@@ -19,6 +19,7 @@ contract Escrow {
     address public inspector;
     address public lender;
 
+    //Modeifiers to restrict access to certain functions based on the caller's role (buyer, seller, inspector) :
     modifier onlyBuyer(uint256 _nftID) {
         require(msg.sender == buyer[_nftID], "Only buyer can call this method");
         _;
@@ -32,12 +33,13 @@ contract Escrow {
         _;
     }
 
+    //Each NFT (_nftID  uint256) has: isListed, purchasePrice, escrowAmount(deposit required), buyer, inspectionPassed, approval (mapping of who approved the sale)
     mapping(uint256 => bool) public isListed;
     mapping(uint256 => uint256) public purchasePrice;
     mapping(uint256 => uint256) public escrowAmount;
     mapping(uint256 => address) public buyer;
     mapping(uint256 => bool) public inspectionPassed;
-    mapping(uint256 => mapping(address => bool)) public approval;
+    mapping(uint256 => mapping(address => bool)) public approval; //For each NFT , Each person (buyer, seller, lender) ,Can approve or not
 
      constructor(
         address _nftAddress,
